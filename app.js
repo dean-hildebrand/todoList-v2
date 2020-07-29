@@ -37,22 +37,20 @@ const foldLaundry = new Item({
 
 const defaultItems = [walkDog, cookDinner, foldLaundry]
 
-Item.insertMany(defaultItems, function(err){
-  if(err){
-    console.log(err);
-  } else {
-    console.log("Successfully inserted Items");
-  }
-})
-
-
+// Item.insertMany(defaultItems, function(err){
+//   if(err){
+//     console.log(err);
+//   } else {
+//     console.log("Successfully inserted Items");
+//   }
+// })
 
 app.get("/", function(req, res) {
 
-
-  res.render("list", {listTitle: "Today", newListItems: items});
-
-});
+  Item.find({},function(err, items){
+        res.render("list", {listTitle: "Today", newListItems: items});
+      })
+    })
 
 app.post("/", function(req, res){
 
