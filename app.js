@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
 // sets the connection for mongoDB and mongoose
-mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser: true})
+mongoose.connect("mongodb://localhost:27017/todolistDB", {useNewUrlParser: true, useUnifiedTopology: true})
 
 // creates schema of whatever thing you want
 const itemsSchema = {
@@ -22,20 +22,30 @@ const itemsSchema = {
 // creates the model for the schema
 const Item = mongoose.model("Item", itemsSchema)
 
+// created new items to save to DB
 const walkDog = new Item({
   name: "Walk the dog"
 })
-walkDog.save()
 
 const cookDinner = new Item({
   name: "Cook Dinner"
 })
-cookDinner.save()
 
 const foldLaundry = new Item({
   name: "Fold the Laundry"
 })
-foldLaundry.save()
+
+const defaultItems = [walkDog, cookDinner, foldLaundry]
+
+Item.insertMany(defaultItems, function(err){
+  if(err){
+    console.log(err);
+  } else {
+    console.log("Successfully inserted Items");
+  }
+})
+
+
 
 app.get("/", function(req, res) {
 
