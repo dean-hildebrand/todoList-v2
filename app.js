@@ -68,16 +68,24 @@ app.get("/", function(req, res) {
 });
 
 app.post("/", function(req, res) {
-  if (req.body.newItem === "") {
-    res.redirect("/");
-  } else {
+    // "newItem" and "list" are the NAME properties in the list ejs partial
     const itemName = req.body.newItem;
+    const listName = req.body.list;
+    // console.log("ListName", listName, "ItemName", itemName);
 
     const item = new Item({
       name: itemName
     });
-    item.save();
-    res.redirect("/");
+
+    if (listName === "Today") {
+      item.save();
+      res.redirect("/");
+    } else {
+      List.findOne({ name: listName }, function(err, foundList) {
+        foundList.items.push(item);
+        foundList.save();
+        res.redirect("/" + listName);
+      });
   }
 });
 
@@ -107,16 +115,17 @@ app.get("/:paramName", function(req, res) {
           items: defaultItems
         });
         list.save();
-        res.redirect('/' + routeName)
+        res.redirect("/" + routeName);
       } else {
         // Show existing list
-        res.render('list', {listTitle: foundList.name, newListItems: foundList.items})
+        res.render("list", {
+          listTitle: foundList.name,
+          newListItems: foundList.items
+        });
       }
     }
   });
-  });
-
-
+});
 
 app.get("/about", function(req, res) {
   res.render("about");
