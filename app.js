@@ -58,12 +58,30 @@ app.get("/", function(req, res) {
 });
 
 app.post("/", function(req, res) {
-  const itemName = req.body.newItem;
+  if (req.body.newItem === "") {
+    res.redirect("/");
+  } else {
+    const itemName = req.body.newItem;
 
-  const item = new Item({
-    name: itemName
+    const item = new Item({
+      name: itemName
+    });
+    item.save();
+    res.redirect("/");
+  }
+});
+
+app.post("/delete", function(req, res) {
+  const checkedItemId = req.body.checkbox;
+
+  Item.deleteOne({ _id: checkedItemId }, function(err) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Item removed");
+    }
+    res.redirect('/');
   });
-  item.save();
 });
 
 app.get("/work", function(req, res) {
