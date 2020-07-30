@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 // npm install mongoose and require it
 const mongoose = require("mongoose");
+const _ = require('lodash')
 
 const app = express();
 
@@ -68,43 +69,55 @@ app.get("/", function(req, res) {
 });
 
 app.post("/", function(req, res) {
-    // "newItem" and "list" are the NAME properties in the list ejs partial
-    const itemName = req.body.newItem;
-    const listName = req.body.list;
-    // console.log("ListName", listName, "ItemName", itemName);
+  // "newItem" and "list" are the NAME properties in the list ejs partial
+  const itemName = req.body.newItem;
+  const listName = req.body.list;
 
-    const item = new Item({
-      name: itemName
+  const item = new Item({
+    name: itemName
+  });
+
+  if (listName === "Today") {
+    item.save();
+    res.redirect("/");
+  } else {
+    List.findOne({ name: listName }, function(err, foundList) {
+      foundList.items.push(item);
+      foundList.save();
+      res.redirect("/" + listName);
     });
-
-    if (listName === "Today") {
-      item.save();
-      res.redirect("/");
-    } else {
-      List.findOne({ name: listName }, function(err, foundList) {
-        foundList.items.push(item);
-        foundList.save();
-        res.redirect("/" + listName);
-      });
   }
 });
 
 app.post("/delete", function(req, res) {
   const checkedItemId = req.body.checkbox;
-  //  you can use the findIdAndRemove method too!
-  Item.deleteOne({ _id: checkedItemId }, function(err) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("Item removed");
-    }
-    res.redirect("/");
-  });
+  const listName = req.body.listName;
+
+  if (listName === "Today") {
+    //  you can use the findIdAndRemove method too!
+    Item.deleteOne({ _id: checkedItemId }, function(err) {
+      if (!err) {
+        console.log("Successfully deleted checked item");
+        res.redirect("/");
+      }
+    });
+  } else {
+    // $pull is mongodb method, finds the item based on the id
+    List.findOneAndUpdate(
+      { name: listName },
+      { $pull: { items: { _id: checkedItemId } } },
+      function(err, foundList) {
+        if (!err) {
+          res.redirect("/" + listName);
+        }
+      }
+    );
+  }
 });
 
 // custom dynamic route
 app.get("/:paramName", function(req, res) {
-  const routeName = req.params.paramName;
+  const routeName = _.capitalize(req.params.paramName);
 
   List.findOne({ name: routeName }, function(err, foundList) {
     if (!err) {
