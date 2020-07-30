@@ -40,6 +40,16 @@ const foldLaundry = new Item({
 
 const defaultItems = [walkDog, cookDinner, foldLaundry];
 
+// -------------------------------------------------------------------------
+// Created a new schema and model for our custom list routes
+const listSchema = {
+  name: String,
+  items: [itemsSchema]
+};
+
+const List = mongoose.model("List", listSchema);
+// -------------------------------------------------------------------------
+
 app.get("/", function(req, res) {
   Item.find({}, function(err, foundItems) {
     if (foundItems.length === 0) {
@@ -73,20 +83,40 @@ app.post("/", function(req, res) {
 
 app.post("/delete", function(req, res) {
   const checkedItemId = req.body.checkbox;
-
+  //  you can use the findIdAndRemove method too!
   Item.deleteOne({ _id: checkedItemId }, function(err) {
     if (err) {
       console.log(err);
     } else {
       console.log("Item removed");
     }
-    res.redirect('/');
+    res.redirect("/");
   });
 });
 
-app.get("/work", function(req, res) {
-  res.render("list", { listTitle: "Work List", newListItems: workItems });
-});
+// custom dynamic route
+app.get("/:paramName", function(req, res) {
+  const routeName = req.params.paramName;
+
+  List.findOne({ name: routeName }, function(err, foundList) {
+    if (!err) {
+      if (!foundList) {
+        // Create a new list
+        const list = new List({
+          name: routeName,
+          items: defaultItems
+        });
+        list.save();
+        res.redirect('/' + routeName)
+      } else {
+        // Show existing list
+        res.render('list', {listTitle: foundList.name, newListItems: foundList.items})
+      }
+    }
+  });
+  });
+
+
 
 app.get("/about", function(req, res) {
   res.render("about");
